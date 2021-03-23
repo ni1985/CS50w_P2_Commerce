@@ -3,5 +3,20 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    <ul>
+        {% for listing in listings %}
+        <li>
+            <h5><a href="/{{ listing.title }}">{{ listing.title }}</a></h5>
+            <p>Current price: ${{ listing.start_bid }}</p>
+            <p> {{ listing.date_time }} </p>
+
+            {% if listing.url == None %}
+            {% else %}
+                <img src="{{ listing.url }}" alt="{{ listing.title }}">
+            {% endif %}     
+
+        </li>
+        {% endfor %}
+    </ul>>
 {% endblock %}
+

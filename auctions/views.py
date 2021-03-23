@@ -4,11 +4,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, ListingForm, Listing
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.all()
+    })
 
 
 def login_view(request):
@@ -61,3 +63,30 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+
+def new_listing_view(request):
+    if request.method == "POST":
+        form = ListingForm(request.POST)
+
+        print(request.user.username)
+        print(request.user)
+
+
+        if form.is_valid():
+            new_listing = form.save(commit=False)
+            new_listing.owner = request.user
+            new_listing.winner = None
+            new_listing.save() 
+
+        return HttpResponseRedirect(reverse("index"))
+
+    else:
+        listing_form = ListingForm()
+        return render(request, "auctions/new_listing.html", {'listing_form':listing_form})
+
+
+def listing(request, listing_page):
+    return render(request, "auctions/listing.html",{
+        "listing": "test name for listing"
+    })
