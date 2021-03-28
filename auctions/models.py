@@ -9,15 +9,22 @@ class User(AbstractUser):
     pass
 
 
+class Category_Choice(models.Model):
+    category = models.CharField(max_length=15, unique=True)
+    
+    def __str__(self):
+            return f"{self.category}"
+
+
 class Listing(models.Model):
     
-    CATEGORY_CHOICES = [
-        ('bk', 'Books'),
-        ('no', 'No category listed'),
-        ('ki', 'Kitchen'),
-        ('gd', 'Garden'),
-        ('mg', 'Magic'),
-    ]
+    #CATEGORY_CHOICES = [
+    #    ('bk', 'Books'),
+    #    ('no', 'Other'),
+    #    ('ki', 'Kitchen'),
+    #    ('gd', 'Garden'),
+    #    ('mg', 'Magic')
+    #]
     
     title = models.CharField(max_length=30)
     owner = models.ForeignKey(
@@ -28,7 +35,15 @@ class Listing(models.Model):
     start_bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
     url = models.URLField(blank=True, null=True)
     date_time = models.DateTimeField(auto_now_add=True)
-    category = models.CharField(choices=CATEGORY_CHOICES, default = "no", max_length=2)
+    #category = models.CharField(choices=CATEGORY_CHOICES, default = "no", max_length=2)
+    listing_cat = models.ForeignKey(
+        Category_Choice,
+        null=True, 
+        blank=True,
+        default = None,
+        on_delete=models.SET_NULL,
+        to_field="category",
+        db_column="listing_cat")
     finished = models.BooleanField(default=False)
     winner = models.ForeignKey(
         User,
@@ -38,7 +53,7 @@ class Listing(models.Model):
         related_name='winner')
 
     def __str__(self):
-        return f"Title: {self.title}; Owner: {self.owner}; Start bid: {self.start_bid}; Category: {self.category}; Finished: {self.finished}; Winner: {self.winner}"
+        return f"Title: {self.title}; Owner: {self.owner}; Start bid: {self.start_bid}; Finished: {self.finished}; Winner: {self.winner}"
 
 
 class Bid(models.Model):
@@ -70,7 +85,20 @@ class Comment(models.Model):
         return f"User: {self.user_id}; Listing: {self.listing_id}; Date: {self.date_time}"
 
 
+class Watchlist(models.Model):
+    user_id = models.ForeignKey(
+        User,
+        on_delete = models.CASCADE)
+    listing_id = models.ManyToManyField(Listing)
+    
+
 class ListingForm(ModelForm):
     class Meta:
         model = Listing
-        fields = ['title', 'description', 'start_bid', 'url', 'category']
+        fields = ['title', 'description', 'start_bid', 'url']
+
+
+class CategoryForm(ModelForm):
+    class Meta:
+        model = Category_Choice
+        fields = ['category']

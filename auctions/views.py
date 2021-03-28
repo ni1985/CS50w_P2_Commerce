@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, ListingForm, Listing
+from .models import User, ListingForm, Listing, Category_Choice, Watchlist
 
 
 def index(request):
@@ -67,14 +67,14 @@ def register(request):
 
 def new_listing_view(request):
     if request.method == "POST":
-        form = ListingForm(request.POST)
+        listing_form = ListingForm(request.POST)
 
         print(request.user.username)
         print(request.user)
 
 
-        if form.is_valid():
-            new_listing = form.save(commit=False)
+        if listing_form.is_valid():
+            new_listing = listing_form.save(commit=False)
             new_listing.owner = request.user
             new_listing.winner = None
             new_listing.save() 
@@ -87,6 +87,44 @@ def new_listing_view(request):
 
 
 def listing(request, listing_page):
+    listing_id = request.GET.get('id')
+    listing = Listing.objects.get(id=listing_id)
+    print(listing.title)
     return render(request, "auctions/listing.html",{
-        "listing": "test name for listing"
+        "listing": listing
+    })
+
+
+def categories(request):
+    return render(request, "auctions/categories.html",{
+        "cat": Category_Choice.objects.all()    
+    })
+
+
+def category(request, category_page):
+    
+    listings = Listing.objects.filter(listing_cat=category_page)
+    print(listing)
+    
+    return render(request, "auctions/category.html",{
+        "category": category_page,
+        "listings": listings
+    })
+
+
+def watchlist(request):
+    user = request.user.id
+    print(user)
+
+    listing = Listing.objects.filter(watchlist = user)
+    print(listing)
+
+    return render(request, "auctions/watchlist.html",{
+        "listings": listing
+    })
+
+
+def comments(request):
+    return render(request, "auctions/comments.html",{
+        "comment": "test name for comment"
     })

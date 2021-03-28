@@ -1,7 +1,27 @@
 {% extends "auctions/layout.html" %}
 
+{% block title %}{{ listing.title }}{% endblock %}
+
 {% block body %}
 
-    <h2>{{ listing }}</h2>
+    <h2>{{ listing.title }}</h2>
+
+    {% if listing.url == None %}
+    {% else %}
+        <img src="{{ listing.url }}" alt="{{ listing.title }}">
+    {% endif %} 
+    
+    <p>Created by: {{ listing.owner }} on {{ listing.date_time }}</p>
+    <p>Description: {{ listing.description }}</p>
+    <p>Start bid: ${{ listing.start_bid }}</p>
+    <p>Current bid: TODO</p>
+    <p>Category: {{ listing.listing_cat }}</p>
+    {% if listing.finished == False %}
+        <p>Make a comment: TODO</p>
+        <p>Make a bid: TODO</p>
+        <p>Add to watchlist: TODO</p>
+    {% else %}
+        <p>Finished</p>
+    {% endif %}   
 
 {% endblock %}

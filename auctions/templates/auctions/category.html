@@ -1,14 +1,13 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
 
+    <h2>Category: {{ category }} </h2>
     <ul>
         {% for listing in listings %}
-        <li>
+            
             <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
-            <p>Description: {{ listing.description }}</p>
-            <p>Current price: ${{ listing.start_bid }} TODO</p>
+            <p>Current price: ${{ listing.start_bid }}</p>
             <p> {{ listing.date_time }} </p>
 
             {% if listing.url == None %}
@@ -16,10 +15,11 @@
                 <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
                     <img src="{{ listing.url }}" alt="{{ listing.title }}">
                 </a>
-            {% endif %}     
-
-        </li>
+            {% endif %}    
+        <!--
+        <li><a href="listings/{{ listing }}">{{ listing }}</a></li>
+        -->
         {% endfor %}
     </ul>
-{% endblock %}
 
+{% endblock %}
