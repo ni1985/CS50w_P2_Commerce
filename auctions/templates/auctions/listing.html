@@ -5,23 +5,37 @@
 {% block body %}
 
     <h2>{{ listing.title }}</h2>
+    
+    {% if listing.finished == True %}
+        <p>Listing is finished</p>
+    {% endif %}
 
     {% if listing.url == None %}
     {% else %}
         <img src="{{ listing.url }}" alt="{{ listing.title }}">
     {% endif %} 
-    
+
     <p>Created by: {{ listing.owner }} on {{ listing.date_time }}</p>
     <p>Description: {{ listing.description }}</p>
     <p>Start bid: ${{ listing.start_bid }}</p>
     <p>Current bid: TODO</p>
     <p>Category: {{ listing.listing_cat }}</p>
     {% if listing.finished == False %}
-        <p>Make a comment: TODO</p>
-        <p>Make a bid: TODO</p>
+        <form method='POST'>
+            {% csrf_token %}
+            {{ bid_form }}
+            <button type="submit" name="btn_bid">Save Changes</button>
+        </form>
+        
+        <form method='POST'>
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit" name="btn_comment">Save Changes</button>
+        </form>
+    
         <p>Add to watchlist: TODO</p>
-    {% else %}
-        <p>Finished</p>
+        <p>Make a bid: TODO</p>
+        <p>Add a comment:</p>
     {% endif %}   
-
+    <p>Comments:</p>
 {% endblock %}

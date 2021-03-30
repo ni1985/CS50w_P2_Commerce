@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, ListingForm, Listing, Category_Choice, Watchlist
+from .models import User, ListingForm, Listing, Category_Choice, Watchlist, CommentForm, BidForm
 
 
 def index(request):
@@ -87,12 +87,43 @@ def new_listing_view(request):
 
 
 def listing(request, listing_page):
+    
     listing_id = request.GET.get('id')
     listing = Listing.objects.get(id=listing_id)
-    print(listing.title)
-    return render(request, "auctions/listing.html",{
-        "listing": listing
-    })
+    print(listing)
+
+    if request.method == 'POST' and 'btn_bid' in request.POST:
+        bid_form = BidForm(request.POST)
+        if bid_form.is_valid():
+            new_bid = bid_form.save(commit=False)
+            new_bid.user_id = request.user
+            new_bid.listing_id = listing
+            print(new_bid)
+            new_bid.save() 
+
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    elif request.method == 'POST' and 'btn_comment' in request.POST:
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.user_id = request.user
+            new_comment.listing_id = listing
+            print(new_comment)
+            new_comment.save()
+
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    else:
+        
+        comment_form = CommentForm()
+        bid_form = BidForm()
+
+        return render(request, "auctions/listing.html", {
+            'listing': listing,
+            'comment_form': comment_form,
+            'bid_form': bid_form    
+        })
 
 
 def categories(request):

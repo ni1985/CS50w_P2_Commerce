@@ -102,3 +102,15 @@ class CategoryForm(ModelForm):
     class Meta:
         model = Category_Choice
         fields = ['category']
+
+
+class BidForm(ModelForm):
+    class Meta:
+        model = Bid
+        fields = ['bid']
+
+
+class CommentForm(ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['com']
