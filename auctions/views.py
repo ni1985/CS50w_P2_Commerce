@@ -3,13 +3,29 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.db.models import Max, Count
 
-from .models import User, ListingForm, Listing, Category_Choice, Watchlist, CommentForm, BidForm
+from .models import User, ListingForm, Listing, Category_Choice, Watchlist, CommentForm, BidForm, Bid, Comment
 
 
 def index(request):
+    listings = Listing.objects.filter(finished__exact = False).values()
+    
+    bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
+    max_bids = []
+
+    for i in range(0, len(listings)):
+        
+        if bids[i]['max_bid'] == None:
+            max_bids.append(listings[i]['start_bid'])
+        else:
+            max_bids.append(bids[i]['max_bid'])
+    zipped_list = zip(listings, max_bids)
+
     return render(request, "auctions/index.html", {
-        "listings": Listing.objects.all()
+        #"listings": listings,
+        #"max_bids": max_bids,
+        "zipped_list": zipped_list
     })
 
 
@@ -72,7 +88,6 @@ def new_listing_view(request):
         print(request.user.username)
         print(request.user)
 
-
         if listing_form.is_valid():
             new_listing = listing_form.save(commit=False)
             new_listing.owner = request.user
@@ -90,15 +105,30 @@ def listing(request, listing_page):
     
     listing_id = request.GET.get('id')
     listing = Listing.objects.get(id=listing_id)
-    print(listing)
+    #print(listing)
+    #print(f"start bid {listing.start_bid}")
+        
+    listing_bids = Bid.objects.filter(listing_id=listing_id)
+    current_bid = listing_bids.latest('bid').bid
+    #print(f"current bid {current_bid}")
+    max_bid = max(listing.start_bid, current_bid)
 
     if request.method == 'POST' and 'btn_bid' in request.POST:
         bid_form = BidForm(request.POST)
+        
+
         if bid_form.is_valid():
+     
             new_bid = bid_form.save(commit=False)
             new_bid.user_id = request.user
             new_bid.listing_id = listing
-            print(new_bid)
+            print(f"BidForm: {new_bid}")
+            if new_bid.bid < max_bid:
+                print(f"Error")
+                return render(request, "auctions/error.html", {
+                    'message':'Your bid is lower than the current price'
+                })
+            print(f"New bid{new_bid}")
             new_bid.save() 
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -118,11 +148,14 @@ def listing(request, listing_page):
         
         comment_form = CommentForm()
         bid_form = BidForm()
+        comments = Comment.objects.filter(listing_id=listing_id).order_by('-date_time')
 
         return render(request, "auctions/listing.html", {
             'listing': listing,
             'comment_form': comment_form,
-            'bid_form': bid_form    
+            'bid_form': bid_form,
+            'current_bid': max_bid,
+            'comments': comments
         })
 
 
@@ -145,10 +178,10 @@ def category(request, category_page):
 
 def watchlist(request):
     user = request.user.id
-    print(user)
+    #print(user)
 
     listing = Listing.objects.filter(watchlist = user)
-    print(listing)
+    #print(listing)
 
     return render(request, "auctions/watchlist.html",{
         "listings": listing

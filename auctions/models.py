@@ -33,6 +33,7 @@ class Listing(models.Model):
         related_name='owner')
     description = models.TextField()
     start_bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
+    #current_bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
     url = models.URLField(blank=True, null=True)
     date_time = models.DateTimeField(auto_now_add=True)
     #category = models.CharField(choices=CATEGORY_CHOICES, default = "no", max_length=2)

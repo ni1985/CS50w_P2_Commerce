@@ -5,6 +5,11 @@
 {% block body %}
 
     <h2>{{ listing.title }}</h2>
+
+    <form method='POST'>
+        <button type="button" name="btn_stop">Stop auction</button>
+    </form>
+    
     
     {% if listing.finished == True %}
         <p>Listing is finished</p>
@@ -17,8 +22,8 @@
 
     <p>Created by: {{ listing.owner }} on {{ listing.date_time }}</p>
     <p>Description: {{ listing.description }}</p>
-    <p>Start bid: ${{ listing.start_bid }}</p>
-    <p>Current bid: TODO</p>
+    <p>Start Price: ${{ listing.start_bid }}</p>
+    <p>Current Price: ${{ current_bid }}</p>
     <p>Category: {{ listing.listing_cat }}</p>
     {% if listing.finished == False %}
         <form method='POST'>
@@ -33,9 +38,15 @@
             <button type="submit" name="btn_comment">Save Changes</button>
         </form>
     
-        <p>Add to watchlist: TODO</p>
-        <p>Make a bid: TODO</p>
-        <p>Add a comment:</p>
-    {% endif %}   
+        <form method='POST'>
+            <button type="button" name="btn_wtchlst">Add to Watchlist</button>
+        </form> 
+    {% endif %}
+      
     <p>Comments:</p>
+    {% for comment in comments %}
+        <p>{{ comment.user_id }}</p>
+        <p>{{ comment.date_time }}</p>
+        <p>{{ comment.com }}</p>
+    {% endfor %}
 {% endblock %}

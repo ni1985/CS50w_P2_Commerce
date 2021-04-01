@@ -4,11 +4,29 @@
     <h2>Active Listings</h2>
 
     <ul>
+        {% for listing, bid in zipped_list %}
+            <li>
+                <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
+                <p>Description: {{ listing.description }}</p>
+                <p>Start Price: ${{ listing.start_bid }}</p>
+                <p>Current Price: ${{bid}}</p>
+                <p> {{ listing.date_time }} </p>
+
+                {% if listing.url == None %}
+                {% else %}
+                    <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
+                        <img src="{{ listing.url }}" alt="{{ listing.title }}">
+                    </a>
+                {% endif %}     
+            </li>
+        {% endfor %}
+        
+        <!--
         {% for listing in listings %}
         <li>
             <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
             <p>Description: {{ listing.description }}</p>
-            <p>Current price: ${{ listing.start_bid }} TODO</p>
+            <p>Start price: ${{ listing.start_bid }}</p>
             <p> {{ listing.date_time }} </p>
 
             {% if listing.url == None %}
@@ -20,6 +38,8 @@
 
         </li>
         {% endfor %}
+        -->
+
     </ul>
 {% endblock %}
 
