@@ -6,10 +6,10 @@
 
     <h2>Your Watchlist:</h2>
     <ul>
-        {% for listing in listings %}
+        {% for listing, bid in zipped_list %}
         <li>
             <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
-            <p>Current price: ${{ listing.start_bid }} TODO</p>
+            <p>Current price: ${{bid}}</p>
             <p> {{ listing.date_time }} </p>
 
             {% if listing.url == None %}

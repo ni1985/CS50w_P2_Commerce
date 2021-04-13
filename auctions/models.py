@@ -66,10 +66,10 @@ class Bid(models.Model):
         on_delete = models.CASCADE)
     date_time = models.DateTimeField(auto_now_add=True)
     bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
-    winner = models.BooleanField(default=False)
+    win = models.BooleanField(default=False)
     
     def __str__(self):
-        return f"Bidder: {self.user_id}; Listing: {self.listing_id}; Date: {self.date_time}; Bid: {self.bid}; Winner: {self.winner}"
+        return f"Bidder: {self.user_id}; Listing: {self.listing_id}; Date: {self.date_time}; Bid: {self.bid}; Win: {self.win}"
 
 
 class Comment(models.Model):
@@ -91,6 +91,9 @@ class Watchlist(models.Model):
         User,
         on_delete = models.CASCADE)
     listing_id = models.ManyToManyField(Listing)
+
+    def __str__(self):
+        return f"User: {self.user_id}; Listing: {self.listing_id}"
     
 
 class ListingForm(ModelForm):

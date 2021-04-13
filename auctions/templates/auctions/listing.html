@@ -6,17 +6,27 @@
 
     <h2>{{ listing.title }}</h2>
 
+    {% if listing.owner == current_user %}
     <form method='POST'>
+        {% csrf_token %}
         <button type="button" name="btn_stop">Stop auction</button>
     </form>
-    
+    {% endif %}
     
     {% if listing.finished == True %}
         <p>Listing is finished</p>
+
+        {% if listing.winner == None %}
+            <p>There is no winner</p>
+        {% endif %}
+
+        {% if listing.winner == current_user %}
+            <p>Congratulateions you won the auction!!!</p>
+        {% endif %}
+
     {% endif %}
 
-    {% if listing.url == None %}
-    {% else %}
+    {% if listing.url != None %}
         <img src="{{ listing.url }}" alt="{{ listing.title }}">
     {% endif %} 
 
@@ -25,13 +35,16 @@
     <p>Start Price: ${{ listing.start_bid }}</p>
     <p>Current Price: ${{ current_bid }}</p>
     <p>Category: {{ listing.listing_cat }}</p>
-    {% if listing.finished == False %}
-        <form method='POST'>
-            {% csrf_token %}
-            {{ bid_form }}
-            <button type="submit" name="btn_bid">Save Changes</button>
-        </form>
+    {% if listing.finished == False and user.is_authenticated %}
         
+        {% if listing.owner != current_user %}
+            <form method='POST'>
+                {% csrf_token %}
+                {{ bid_form }}
+                <button type="submit" name="btn_bid">Save Changes</button>
+            </form>
+        {% endif %}
+
         <form method='POST'>
             {% csrf_token %}
             {{ comment_form }}
@@ -39,6 +52,7 @@
         </form>
     
         <form method='POST'>
+            {% csrf_token %}
             <button type="button" name="btn_wtchlst">Add to Watchlist</button>
         </form> 
     {% endif %}

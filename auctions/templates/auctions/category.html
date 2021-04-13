@@ -4,10 +4,10 @@
 
     <h2>Category: {{ category }} </h2>
     <ul>
-        {% for listing in listings %}
+        {% for listing, bid in zipped_list %}
             
             <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
-            <p>Current price: ${{ listing.start_bid }}</p>
+            <p>Current price: ${{bid}}</p>
             <p> {{ listing.date_time }} </p>
 
             {% if listing.url == None %}
