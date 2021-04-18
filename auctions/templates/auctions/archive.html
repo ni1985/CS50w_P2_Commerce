@@ -1,0 +1,29 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}Archive{% endblock %}
+
+{% block body %}
+
+    <h2>Finished listings:</h2>
+    <ul>
+        {% for listing, bid in zipped_list %}
+        <li>
+            <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
+            <p>Current price: ${{bid}}</p>
+            <p> {{ listing.date_time }} </p>
+
+            {% if listing.url == None %}
+            {% else %}
+                <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
+                    <img src="{{ listing.url }}" alt="{{ listing.title }}">
+                </a>
+            {% endif %}     
+
+        </li>
+        {% empty %} 
+            <p>All listings are active...</p>
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}

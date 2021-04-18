@@ -6,22 +6,29 @@
 
     <h2>{{ listing.title }}</h2>
 
-    {% if listing.owner == current_user %}
-    <form method='POST'>
+    <a href="{% url 'watchlist' %}?add_user={{ current_user }}&listing_id={{ listing_id }}">Add to the watchlist</a>
+
+    {% if listing.owner == current_user and listing.finished == False  %}
+    <form action="{% url 'listing' listing.title %}?id={{ listing.id }}" method='POST'>
         {% csrf_token %}
-        <button type="button" name="btn_stop">Stop auction</button>
+        <input id="stop_auction" name="stop_auction" type="hidden" value="True">
+        <input type="submit" name="btn_stop" value="Stop the auction">
     </form>
     {% endif %}
+
+    <!--
+    <button type="button" name="btn_stop">Stop auction</button>
+    -->
     
     {% if listing.finished == True %}
-        <p>Listing is finished</p>
+        <p>The listing is finished</p>
 
         {% if listing.winner == None %}
             <p>There is no winner</p>
-        {% endif %}
-
-        {% if listing.winner == current_user %}
-            <p>Congratulateions you won the auction!!!</p>
+        {% elif listing.winner == current_user %}
+            <p>Congratulations you won the auction!!!</p>
+        {% elif listing.owner == current_user %}
+            <p>{{listing.winner}} won the auction</p>
         {% endif %}
 
     {% endif %}
@@ -33,7 +40,12 @@
     <p>Created by: {{ listing.owner }} on {{ listing.date_time }}</p>
     <p>Description: {{ listing.description }}</p>
     <p>Start Price: ${{ listing.start_bid }}</p>
-    <p>Current Price: ${{ current_bid }}</p>
+    
+    {% if date_bid != None %}
+        <p>Current Price: ${{ current_bid }}</p>
+        <p>Latest bid on    : {{ date_bid }}</p>
+    {% endif %}
+
     <p>Category: {{ listing.listing_cat }}</p>
     {% if listing.finished == False and user.is_authenticated %}
         
@@ -50,11 +62,18 @@
             {{ comment_form }}
             <button type="submit" name="btn_comment">Save Changes</button>
         </form>
-    
+        <!--
         <form method='POST'>
             {% csrf_token %}
             <button type="button" name="btn_wtchlst">Add to Watchlist</button>
         </form> 
+        -->
+
+
+
+
+
+
     {% endif %}
       
     <p>Comments:</p>

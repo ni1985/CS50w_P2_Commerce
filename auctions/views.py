@@ -108,52 +108,27 @@ def new_listing_view(request):
 
 def listing(request, listing_page):
     
+    print(f"request POST: {request.POST}")
     # retrieve listing ID
     listing_id = request.GET.get('id')
 
     # Retrieve all data about the listing
     listing = Listing.objects.get(id=listing_id)
-    #print(type(listing))
-    #print(f"owner {listing.owner}")
-    
-    # select all bids for the current listing
-    #listing_bids = Bid.objects.filter(listing_id=listing_id)
-    #print(listing_bids)
 
-    #latest_bid = Bid.objects.filter(listing_id=listing_id).latest('bid')
-    #print(f"latest_bid: {latest_bid}")
-    #print(f"bidder: {latest_bid.bidder}")
-    #print(type(latest_bid))
-
-
-    # find maximum bid for lisiting and write the value from dict to variable current_bid
-    #current_bid = listing_bids.aggregate(Max('bid')).get("bid__max")
-    #print(current_bid)
-
-    # If there is no bids current bid = start bid 
-    
-    #try:
-    ##    current_bid = Bid.objects.filter(listing_id=listing_id).latest('bid')
-    #    max_bid = current_bid.bid
-    #    print(f"current bid {current_bid.bid}")
-
-    #except ObjectDoesNotExist:
-    #    current_bid == None
-    #    print("object does not exist")
-    #    max_bid = listing.start_bid
-
+    # Retrieve value of teh current Bid
     current_bid = Bid.objects.filter(listing_id=listing_id)
     
+    # check if there was bids
     if current_bid:
-        print("exist")
         max_bid = current_bid.latest('bid').bid
+        date_bid = current_bid.latest('bid').date_time
     else:
-        print("not exist")
         max_bid = listing.start_bid
+        date_bid = None
 
 
     print(f"bid: {current_bid}")
-    print(f"bidder: {current_bid.latest('bid').user_id}")
+    #print(f"bidder: {current_bid.latest('bid').user_id}")
     #.latest('bid')
 
     # If there is no bids current bid = start bid 
@@ -167,7 +142,6 @@ def listing(request, listing_page):
     # button bid
     if request.method == 'POST' and 'btn_bid' in request.POST:
         bid_form = BidForm(request.POST)
-        
 
         if bid_form.is_valid():
      
@@ -198,60 +172,63 @@ def listing(request, listing_page):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     # button add to watchlist
-    elif request.method == 'POST' and 'btn_wtchlst' in request.POST:
-        user_id = request.user
-        watchlist = Watchlist(user_id=user_id, listing_id=listing_id)
-        watchlist.save()
+    #elif request.method == 'GET' and 'btn_wtchlst' in request.POST:
+        
+        #print('123456')
+        #watchlist = Watchlist(user_id=user_id, listing_id=listing_id)
+        # Watchlist.objects.get(user_id).entry_set.add(listing_id)
+        #print(Watchlist.objects.get(listing_id = listing_id))
+        #watchlist.save()
 
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        #return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     # stop auction
-    elif request.method == 'POST' and 'btn_stop' in request.POST:
+    elif request.method == 'POST' and 'stop_auction' in request.POST:
         
-        # check if user have permissions to stop auction
-        if listing.owner == request.user:
+        stop_auction = request.POST
+        print(f"stop auction: {stop_auction}")
+        listing.finished = True
         
-            if current_bid:
-                print("exist")
-               
-                current_bid.latest('bid').finished = True
-                current_bid.latest('bid').winner = current_bid.latest('bid').user_id
-                current_bid.latest('bid').win = True
-                current_bid.latest('bid').save()
-            else:
-                print("not exist")
-                listing.finished = True
-                listing.save()
+        if current_bid:
+            listing.winner = current_bid.latest('bid').user_id
+            current_bid.latest('bid').win = True
+            current_bid.latest('bid').save()
+        
+        listing.save()
 
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))        
-
-        else:
-            return render(request, "auctions/error.html", {
-                    'message':'Error: You are not allowed to stop auction'
-                })
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))        
 
     else:
         
         comment_form = CommentForm()
         bid_form = BidForm()
         comments = Comment.objects.filter(listing_id=listing_id).order_by('-date_time')
-
+        print(listing)
+        print(f"listing_id {listing_id}")
         return render(request, "auctions/listing.html", {
             'listing': listing,
             'comment_form': comment_form,
             'bid_form': bid_form,
             'current_bid': max_bid,
             'comments': comments,
-            'current_user': request.user
+            'current_user': request.user,
+            'date_bid': date_bid,
+            'listing_id':listing_id
         })
 
+# Add finished listings
+#def finished_listing(request):
+#    return render(request, "auctions/comments.html",{
+#        "comment": "test name for comment"
+#    })
 
+# Show Categories
 def categories(request):
     return render(request, "auctions/categories.html",{
         "cat": Category_Choice.objects.all()    
     })
 
-
+# Show page with selected categories
 def category(request, category_page):
     
     listings = Listing.objects.filter(listing_cat=category_page)
@@ -279,38 +256,95 @@ def category(request, category_page):
         "zipped_list": zipped_list
     })
 
-
-def watchlists(request):
-    user = request.user.id
-    #print(user)
-
-    # Select only listings added to watchlist by the user
-    listings = Listing.objects.filter(watchlist = user)
-    print(listings)
+def archive(request):
     
+    # Retrieve all listings added to the watchlist
+    listings = Listing.objects.filter(finished=True)
+    print(listings)
+
     # Retrieve Max bids for all listings and filter by ID
     bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
     max_bids = []
-    print(max_bids)
-
+    print(bids)
+    print(f"max bids: {bids}")
+    
+    print(f"listing number 1: {listings[0]}")
+    print(len(listings))
+    print(listings[0].start_bid)
+    
     # for all listings if there is no bids show start bid
     for i in range(0, len(listings)):
-        
         if bids[i]['max_bid'] == None:
-            max_bids.append(listings[i]['start_bid'])
+            max_bids.append(listings[i].start_bid)
         else:
             max_bids.append(bids[i]['max_bid'])
-    
-    # zip data from listings with max_bids
-    zipped_list = zip(listings, max_bids)
 
-    return render(request, "auctions/watchlist.html",{
+    zipped_list = zip(listings, max_bids)
+    print(max_bids)
+
+    return render(request, "auctions/archive.html",{
         #"listings": listing
         "zipped_list": zipped_list
     })
 
+# Show Watchlist
+def watchlists(request):
+    
+    user = request.user.id
+    user2 = request.user
+    print(user2)
+    #add_user = request.GET.get('add_user', 'empty')
+    listing_id = request.GET.get('listing_id')
 
-def comments(request):
-    return render(request, "auctions/comments.html",{
-        "comment": "test name for comment"
-    })
+    print(f"listing_id {listing_id}")
+
+    if listing_id == 'empty':
+        print("no user")
+    else:
+        # add listing to the watchlist of the current user
+        
+        wtchl = Watchlist.objects.create(user_id=user2)
+        print(f"WATCHLIST {wtchl}")
+        wtchl.save()
+        wtchl.listing_id.add(listing_id)
+
+
+
+    # Retrieve all listings added to the watchlist
+    #listings = Listing.objects.filter(watchlist__user_id=user)
+    #print(listings)
+    #if not listings:
+    #    print("None")
+    #    return render(request, "auctions/watchlist.html",{
+            ##"listings": listing
+    #        "zipped_list": None
+    #    })
+
+    #else:  
+    #    # Retrieve Max bids for all listings and filter by ID
+    #    bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
+    #    max_bids = []
+    #    print(bids)
+    #    print(f"max bids: {bids}")
+        
+    #    print(f"listing number 1: {listings[0]}")
+    #    print(len(listings))
+    #    print(listings[0].start_bid)
+        
+    ##    # for all listings if there is no bids show start bid
+    #    for i in range(0, len(listings)):
+    #        if bids[i]['max_bid'] == None:
+    #            max_bids.append(listings[i].start_bid)
+    #        else:
+    #            max_bids.append(bids[i]['max_bid'])
+
+    #    zipped_list = zip(listings, max_bids)
+    #    print(max_bids)
+
+        return render(request, "auctions/watchlist.html",{
+            #"listings": listing
+        #    "zipped_list": zipped_list
+            "zipped_list": None
+        })
+
+
