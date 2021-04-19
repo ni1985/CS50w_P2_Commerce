@@ -2,10 +2,12 @@
 
 {% block body %}
 
-    <h2>Available categories</h2>
-    <ul>
+    <h2>Available categories:</h2>
+    <ul style="margin-left: 15px">
         {% for category in cat %}
-            <li><a href="categories/{{ category }}">{{ category }}</a></li>
+            <li>
+                <h5><a href="categories/{{ category }}">{{ category }}</a></h5>            
+            </li>
         {% endfor %}
     </ul>
 

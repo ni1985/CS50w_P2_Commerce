@@ -5,21 +5,32 @@
 {% block body %}
 
     <h2>Your Watchlist:</h2>
-    <ul>
+    <ul class="no_bullets">
         {% for listing, bid in zipped_list %}
-        <li>
-            <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
-            <p>Current price: ${{bid}}</p>
-            <p> {{ listing.date_time }} </p>
-
-            {% if listing.url == None %}
-            {% else %}
-                <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
-                    <img src="{{ listing.url }}" alt="{{ listing.title }}">
-                </a>
-            {% endif %}     
-
+        <li class = "listing_list">
+            <div class = "border border-light rounded bg-light text-dark">
+            <div class = "container">
+                <div class="row" style="margin: 10px 0px">
+                    <div class="col">
+                        {% if listing.url == None %}
+                        {% else %}
+                            <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
+                                <img src="{{ listing.url }}" class="img-fluid float-start" alt="{{ listing.title }}">
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        <h5><a href="{% url 'listing' listing.title %}?id={{ listing.id }}">{{ listing.title }}</a></h5>
+                        <p>Description: {{ listing.description }}</p>
+                        <p>Start Price: ${{ listing.start_bid }}</p>
+                        <p><strong>Current Price</strong>: ${{bid}}</p>
+                        <p class="date">Created: {{ listing.date_time }} </p>
+                    </div>
+                </div>
+            </div>
+            </div> 
         </li>
+
         {% empty %} 
             <p>Your watchlist is empty...</p>
         {% endfor %}

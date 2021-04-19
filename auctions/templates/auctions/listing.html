@@ -4,82 +4,91 @@
 
 {% block body %}
 
-    <h2>{{ listing.title }}</h2>
-
-    <a href="{% url 'watchlist' %}?add_user={{ current_user }}&listing_id={{ listing_id }}">Add to the watchlist</a>
-
-    {% if listing.owner == current_user and listing.finished == False  %}
-    <form action="{% url 'listing' listing.title %}?id={{ listing.id }}" method='POST'>
-        {% csrf_token %}
-        <input id="stop_auction" name="stop_auction" type="hidden" value="True">
-        <input type="submit" name="btn_stop" value="Stop the auction">
-    </form>
-    {% endif %}
-
-    <!--
-    <button type="button" name="btn_stop">Stop auction</button>
-    -->
+    <h2>Listing: {{ listing.title }}</h2>
     
-    {% if listing.finished == True %}
-        <p>The listing is finished</p>
-
-        {% if listing.winner == None %}
-            <p>There is no winner</p>
-        {% elif listing.winner == current_user %}
-            <p>Congratulations you won the auction!!!</p>
-        {% elif listing.owner == current_user %}
-            <p>{{listing.winner}} won the auction</p>
-        {% endif %}
-
-    {% endif %}
-
-    {% if listing.url != None %}
-        <img src="{{ listing.url }}" alt="{{ listing.title }}">
-    {% endif %} 
-
-    <p>Created by: {{ listing.owner }} on {{ listing.date_time }}</p>
-    <p>Description: {{ listing.description }}</p>
-    <p>Start Price: ${{ listing.start_bid }}</p>
-    
-    {% if date_bid != None %}
-        <p>Current Price: ${{ current_bid }}</p>
-        <p>Latest bid on    : {{ date_bid }}</p>
-    {% endif %}
-
-    <p>Category: {{ listing.listing_cat }}</p>
-    {% if listing.finished == False and user.is_authenticated %}
+    <div class="listing_description">
         
-        {% if listing.owner != current_user %}
+        {% if listing.url != None %}
+            <img src="{{ listing.url }}" class="rounded" style="width: 70%" alt="{{ listing.title }}">
+        {% endif %} 
+
+        <div class="listing_list">
+        {% if listing.owner == current_user and listing.finished == False  %}
+        <form action="{% url 'listing' listing.title %}?id={{ listing.id }}" method='POST'>
+            {% csrf_token %}
+            <input id="stop_auction" name="stop_auction" type="hidden" value="True">
+            <input type="submit" name="btn_stop" class="btn btn-outline-danger" value="Stop the auction">
+        </form>
+        {% endif %}
+        </div>
+
+        {% if listing.finished == True %}
+            <p>The listing is finished</p>
+
+            {% if listing.winner == None %}
+                <p>There is no winner</p>
+            {% elif listing.winner == current_user %}
+                <p><strong>Congratulations you won the auction!!!</strong></p>
+            {% elif listing.owner == current_user %}
+                <p>{{listing.winner}} won the auction</p>
+            {% endif %}
+
+        {% endif %}
+        
+        
+        <p>Description: {{ listing.description }}</p>
+        
+        {% if date_bid != None %}
+            <p class="price"><strong>${{ current_bid }}</strong></p>
+        {% endif %}
+        <p>Start Price: ${{ listing.start_bid }}</p>
+        {% if date_bid != None %}
+            <p>{{ num_bids }} bid(s) so far. <span class="date">Latest bid on: {{ date_bid }}</span></p>
+        {% endif %}
+        
+        <p class="date">Created by: {{ listing.owner }} on {{ listing.date_time }}</p>   
+        
+        <p>Category: {{ listing.listing_cat }}</p>
+        {% if listing.finished == False and user.is_authenticated %}
+
+
+            {% if listing.owner != current_user %}
+                <form method='POST'>
+                    {% csrf_token %}
+                    <div>{{ bid_form.bid }}</div>
+                    <div class="listing_list">
+                        <button type="submit" class="btn btn-outline-primary" name="btn_bid">Make a bid</button>
+                    </div>
+                </form>
+            {% endif %}
+
             <form method='POST'>
                 {% csrf_token %}
-                {{ bid_form }}
-                <button type="submit" name="btn_bid">Save Changes</button>
+                {{ comment_form.com }}
+                <div class="listing_list">
+                <button type="submit" class="btn btn-outline-primary" name="btn_comment">Add a comment</button>
+                </div>
             </form>
+            
+            <div class="listing_list">
+            {% if not wtchlst %}
+                <a href="{% url 'watchlist' %}?add_user={{ current_user }}&listing_title={{ listing.title }}">Add to the watchlist</a>
+            {% elif wtchlst == True %}
+                <a href="{% url 'watchlist' %}?remove_user={{ current_user }}&listing_title={{ listing.title }}">Remove from the watchlist</a>
+            {% endif %}
+            </div>
+
         {% endif %}
-
-        <form method='POST'>
-            {% csrf_token %}
-            {{ comment_form }}
-            <button type="submit" name="btn_comment">Save Changes</button>
-        </form>
-        <!--
-        <form method='POST'>
-            {% csrf_token %}
-            <button type="button" name="btn_wtchlst">Add to Watchlist</button>
-        </form> 
-        -->
-
-
-
-
-
-
-    {% endif %}
-      
-    <p>Comments:</p>
+    
+    
+    <h5 style="margin-top: 20px">Comments:</h5>
     {% for comment in comments %}
-        <p>{{ comment.user_id }}</p>
-        <p>{{ comment.date_time }}</p>
-        <p>{{ comment.com }}</p>
+        <div class = "border border-dark rounded bg-light text-dark" style="margin: 10px 0px; padding: 0px 15px">
+            <p><strong>{{ comment.user_id }}</strong> on <span class="date">{{ comment.date_time }}</span></p>
+            <p>{{ comment.com }}</p>
+        </div>
     {% endfor %}
+
+    </div>
+
 {% endblock %}

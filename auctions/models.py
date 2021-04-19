@@ -17,15 +17,7 @@ class Category_Choice(models.Model):
 
 
 class Listing(models.Model):
-    
-    #CATEGORY_CHOICES = [
-    #    ('bk', 'Books'),
-    #    ('no', 'Other'),
-    #    ('ki', 'Kitchen'),
-    #    ('gd', 'Garden'),
-    #    ('mg', 'Magic')
-    #]
-    
+        
     title = models.CharField(max_length=30)
     owner = models.ForeignKey(
         User, 
@@ -33,10 +25,8 @@ class Listing(models.Model):
         related_name='owner')
     description = models.TextField()
     start_bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
-    #current_bid = models.IntegerField(validators=[MinValueValidator(decimal.Decimal('0.01'))])
     url = models.URLField(blank=True, null=True)
     date_time = models.DateTimeField(auto_now_add=True)
-    #category = models.CharField(choices=CATEGORY_CHOICES, default = "no", max_length=2)
     listing_cat = models.ForeignKey(
         Category_Choice,
         null=True, 
@@ -52,6 +42,10 @@ class Listing(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='winner')
+    watchlist = models.ManyToManyField(
+        User, 
+        blank = True,
+        related_name = 'watchlist')
 
     def __str__(self):
         return f"Title: {self.title}; Owner: {self.owner}; Start bid: {self.start_bid}; Finished: {self.finished}; Winner: {self.winner}"
@@ -84,22 +78,17 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"User: {self.user_id}; Listing: {self.listing_id}; Date: {self.date_time}"
-
-
-class Watchlist(models.Model):
-    user_id = models.ForeignKey(
-        User,
-        on_delete = models.CASCADE)
-    listing_id = models.ManyToManyField(Listing)
-
-    def __str__(self):
-        return f"User: {self.user_id}; Listing: {self.listing_id}"
     
 
 class ListingForm(ModelForm):
     class Meta:
         model = Listing
-        fields = ['title', 'description', 'start_bid', 'url']
+        fields = ['title', 'description', 'start_bid', 'listing_cat', 'url']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for myField in self.fields:
+            self.fields[myField].widget.attrs['class'] = 'form-control'
 
 
 class CategoryForm(ModelForm):
@@ -113,8 +102,18 @@ class BidForm(ModelForm):
         model = Bid
         fields = ['bid']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for myField in self.fields:
+            self.fields[myField].widget.attrs['class'] = 'form-control'
+
 
 class CommentForm(ModelForm):
     class Meta:
         model = Comment
         fields = ['com']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for myField in self.fields:
+            self.fields[myField].widget.attrs['class'] = 'form-control'

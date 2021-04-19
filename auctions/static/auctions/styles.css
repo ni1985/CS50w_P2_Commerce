@@ -1,3 +1,43 @@
 body {
     padding: 10px;
 }
+
+h2 {
+    margin-left: 33px;
+    color: darkblue;
+}
+
+h5 {
+    /*margin-top: 15px;*/ 
+}
+
+p {
+    margin: 5px 0px;
+}
+
+.date {
+    color: darkgrey;
+    font-size: small;
+    margin-bottom: 5px;
+}
+
+.center {
+    text-align: center;
+    color: darkblue;
+}
+
+.no_bullets {
+    list-style-type: none;
+}
+
+.listing_list {
+    padding: 15px 0px;
+}
+
+.listing_description {
+    margin-left: 33px;
+}
+
+.price {
+    font-size: x-large;
+}
