@@ -195,6 +195,7 @@ def listing(request, listing_page):
         bid_form = BidForm()
         comments = Comment.objects.filter(listing_id=listing_id).order_by('-date_time')
         current_user = request.user
+        
         if request.user.is_anonymous:
             wtchlst = None
         else:
