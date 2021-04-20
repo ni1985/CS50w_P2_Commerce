@@ -6,24 +6,25 @@ from django.urls import reverse
 from django.db.models import Max, Count
 from django.core.exceptions import ObjectDoesNotExist
 from .models import User, ListingForm, Listing, Category_Choice, CommentForm, BidForm, Bid, Comment
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
     # Retrieve all running listings
     listings = Listing.objects.filter(finished__exact = False).values()
-    
+
     # Retrieve Max bids for all listings and filter by ID
     bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
     max_bids = []
 
     # for all listings if there is no bids show start bid
     for i in range(0, len(listings)):
-        
+
         if bids[i]['max_bid'] == None:
             max_bids.append(listings[i]['start_bid'])
         else:
             max_bids.append(bids[i]['max_bid'])
-    
+
     # zip data from listings with max_bids
     zipped_list = zip(listings, max_bids)
 
@@ -84,6 +85,7 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
+@login_required
 def new_listing_view(request):
     if request.method == "POST":
         # Read form from the POST request
@@ -94,7 +96,7 @@ def new_listing_view(request):
             new_listing = listing_form.save(commit=False)
             new_listing.owner = request.user
             new_listing.winner = None
-            new_listing.save() 
+            new_listing.save()
 
         return HttpResponseRedirect(reverse("index"))
 
@@ -105,7 +107,7 @@ def new_listing_view(request):
 
 
 def listing(request, listing_page):
-    
+    print(request.user)
     # Retrieve listing ID
     listing_id = request.GET.get('id')
 
@@ -117,43 +119,52 @@ def listing(request, listing_page):
 
     # Retrieve all data about the listing
     listing = Listing.objects.get(id=listing_id)
-    
+
     # Retrieve value of the current Bid
     current_bid = Bid.objects.filter(listing_id=listing_id)
     num_bids = current_bid.count()
-    
+
     # check if there was bids
     if current_bid:
         max_bid = current_bid.latest('bid').bid
         date_bid = current_bid.latest('bid').date_time
+        user_bid = current_bid.latest('bid').user_id
+        print(user_bid)
     else:
         max_bid = listing.start_bid
         date_bid = None
+        user_bid = None
 
     # Action with a 'Bid' button
     if request.method == 'POST' and 'btn_bid' in request.POST:
         bid_form = BidForm(request.POST)
-        
+
         # Make bid if form is valid
         if bid_form.is_valid():
             new_bid = bid_form.save(commit=False)
             new_bid.user_id = request.user
             new_bid.listing_id = listing
-            
+
             # Check if the bid is less than previous bid or start bid
-            if new_bid.bid < max_bid:
-                
-                return render(request, "auctions/error.html", {
-                    'message':'Your bid is lower than the current price'
-                })
-            new_bid.save() 
+            if current_bid:
+                if new_bid.bid <= current_bid.latest('bid').bid:
+                    return render(request, "auctions/error.html", {
+                        'message':'Your bid is lower than the current price'
+                    })
+            else: 
+                if new_bid.bid < listing.start_bid:        
+                    return render(request, "auctions/error.html", {
+                        'message':'Your bid is lower than the current price'
+                    })
+
+            new_bid.save()
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     # Action with a 'Comment' button
     elif request.method == 'POST' and 'btn_comment' in request.POST:
         comment_form = CommentForm(request.POST)
-        
+
         if comment_form.is_valid():
             new_comment = comment_form.save(commit=False)
             new_comment.user_id = request.user
@@ -164,18 +175,18 @@ def listing(request, listing_page):
 
     # Stop auction
     elif request.method == 'POST' and 'stop_auction' in request.POST:
-        
+
         stop_auction = request.POST
         listing.finished = True
-        
+
         if current_bid:
             listing.winner = current_bid.latest('bid').user_id
             current_bid.latest('bid').win = True
             current_bid.latest('bid').save()
-        
+
         listing.save()
 
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))        
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     # retrieve data to generate listing information
     else:
@@ -184,8 +195,12 @@ def listing(request, listing_page):
         bid_form = BidForm()
         comments = Comment.objects.filter(listing_id=listing_id).order_by('-date_time')
         current_user = request.user
-        wtchlst = Listing.objects.filter(id=listing_id, watchlist = current_user).exists()
-        
+        if request.user.is_anonymous:
+            wtchlst = None
+        else:
+            print("not ananymous")
+            wtchlst = Listing.objects.filter(id=listing_id, watchlist = current_user).exists()
+
         return render(request, "auctions/listing.html", {
             'listing': listing,
             'comment_form': comment_form,
@@ -194,6 +209,7 @@ def listing(request, listing_page):
             'comments': comments,
             'current_user': request.user,
             'date_bid': date_bid,
+            'user_bid': user_bid,
             'listing_id':listing_id,
             'wtchlst': wtchlst,
             'num_bids': num_bids
@@ -202,17 +218,18 @@ def listing(request, listing_page):
 # Show Categories
 def categories(request):
     return render(request, "auctions/categories.html",{
-        "cat": Category_Choice.objects.all()    
+        "cat": Category_Choice.objects.all()
     })
+
 
 # Show page with selected categories
 def category(request, category_page):
-    
+
     listings = Listing.objects.filter(listing_cat=category_page)
 
     # Retrieve Max bids for all listings and filter by ID
     bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
-    max_bids = []    
+    max_bids = []
 
     # for all listings if there is no bids show start bid
     for i in range(0, len(listings)):
@@ -220,24 +237,25 @@ def category(request, category_page):
             max_bids.append(listings[i].start_bid)
         else:
             max_bids.append(bids[i]['max_bid'])
-    
+
     # zip data from listings with max_bids
     zipped_list = zip(listings, max_bids)
-    
+
     return render(request, "auctions/category.html",{
         "category": category_page,
         "zipped_list": zipped_list
     })
 
+
 def archive(request):
-    
+
     # Retrieve all finished listings
     listings = Listing.objects.filter(finished=True)
 
     # Retrieve Max bids for all listings and filter by ID
     bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
     max_bids = []
-   
+
     # for all listings if there is no bids show start bid
     for i in range(0, len(listings)):
         if bids[i]['max_bid'] == None:
@@ -252,9 +270,11 @@ def archive(request):
         "zipped_list": zipped_list
     })
 
+
 # Show Watchlist
+@login_required
 def watchlists(request):
-    
+
     user = request.user.id
     add_user = request.GET.get('add_user', 'empty')
     remove_user = request.GET.get('remove_user', 'empty')
@@ -278,11 +298,11 @@ def watchlists(request):
     if not listings:
         zipped_list = None
 
-    else:  
+    else:
         # Retrieve Max bids for all listings and filter by ID
         bids = listings.values('title').annotate(max_bid=Max('bid__bid')).extra(order_by = ['id'])
         max_bids = []
-                
+
         # for all listings if there is no bids show start bid
         for i in range(0, len(listings)):
             if bids[i]['max_bid'] == None:

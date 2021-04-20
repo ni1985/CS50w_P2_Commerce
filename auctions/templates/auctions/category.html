@@ -13,7 +13,7 @@
                             {% if listing.url == None %}
                             {% else %}
                                 <a href="{% url 'listing' listing.title %}?id={{ listing.id }}">
-                                    <img src="{{ listing.url }}" class="img-fluid float-start" alt="{{ listing.title }}">
+                                    <img src="{{ listing.url }}" class="img-fluid rounded float-start" style="width: 300px" alt="{{ listing.title }}">
                                 </a>
                             {% endif %}
                         </div>

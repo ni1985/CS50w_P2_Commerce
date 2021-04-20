@@ -9,7 +9,7 @@
     <div class="listing_description">
         
         {% if listing.url != None %}
-            <img src="{{ listing.url }}" class="rounded" style="width: 70%" alt="{{ listing.title }}">
+            <img src="{{ listing.url }}" class="rounded" style="width: 600px" alt="{{ listing.title }}">
         {% endif %} 
 
         <div class="listing_list">
@@ -23,7 +23,7 @@
         </div>
 
         {% if listing.finished == True %}
-            <p>The listing is finished</p>
+            <p>The listing was finished</p>
 
             {% if listing.winner == None %}
                 <p>There is no winner</p>
@@ -43,10 +43,17 @@
         {% endif %}
         <p>Start Price: ${{ listing.start_bid }}</p>
         {% if date_bid != None %}
-            <p>{{ num_bids }} bid(s) so far. <span class="date">Latest bid on: {{ date_bid }}</span></p>
+            <p>{{ num_bids }} bid(s) so far. 
+                
+                {% if user_bid == current_user %}
+                    You've made the most recent bid
+                {% endif %}
+            </p>    
+            <p class="date">Latest bid on: {{ date_bid }}</p>
+            
         {% endif %}
         
-        <p class="date">Created by: {{ listing.owner }} on {{ listing.date_time }}</p>   
+        <p class="date">Created by: <strong>{{ listing.owner }}</strong> on {{ listing.date_time }}</p>   
         
         <p>Category: {{ listing.listing_cat }}</p>
         {% if listing.finished == False and user.is_authenticated %}
